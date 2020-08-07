@@ -67,6 +67,11 @@
 void wfifi_getID_toSPIFF();  
 void wfifi_getID_toSPIFF(String ssid, String pswd, String ip, WIFI_MOD mod);  
 void wfifi_getID_toSPIFF(String ssid, String pswd, String ip, String ApIp, WIFI_MOD mod);
+void wfifi_getID_toSPIFF(
+    String ssid, String pswd, 
+    String ip, String ApIp, 
+    String wifi_subnet, String wifi_gateway, 
+    WIFI_MOD mod);
 void wifi_print_networkInfo(String * s);    
 void wifi_loop();    
 void wifi_end();    
@@ -97,28 +102,10 @@ String wifi_id_get_ap_ssid(WIFI_ID * wifi)    ;
 String wifi_id_get_mod(WIFI_ID * wifi)        ;
 String wifi_id_get_noip(WIFI_ID * wifi)       ;
 
-#ifdef TELNET_ENABLE
-boolean telnet_put  (char *     output_string);
-boolean telnet_put  (String *   output_string);
-boolean telnet_get  (char *     input_string);
-void    telnet_setup();
-void    telnet_loop ();
-void    remote_print(String * s);
-void    remote_print(char * s);
 
-enum    dm {none, local, remote, both};
-extern  dm debug_mode;
 
-void debug(const String * s);
-void debug(String * s);
-void debug(char * buf);
-
-void local_print(String * s);
-void local_print(char * s);
-#endif
-void debugPrint(String buf);
-void debugPrintLn(String buf);
 void build_host_name(char * hostnamePrefix) ;
+
 extern char b_host_name[];;
 #endif
 

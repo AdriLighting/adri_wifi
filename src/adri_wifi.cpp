@@ -15,7 +15,7 @@ extern boolean WIFI_CONNECTSTART;
 
 // #define WIFIMOD WIFI_STA
 // #define WIFIMOD WIFI_AP_STA
-#define WIFIMOD WIFI_AP_STA
+#define WIFIMOD WIFI_STA
 
 char b_host_name[80];
 void build_host_name(char * hostnamePrefix) {
@@ -151,7 +151,7 @@ void wifi_connect(char* ssid, char* password) {
 
         if (retries > 40) {  
 
-            WiFi.disconnect(true);
+            WiFi.disconnect();
             delay(1000);
             
             WiFi.mode(WIFIMOD);   
@@ -208,7 +208,7 @@ void wifi_connect(char* ssid, char* password, wifiConnectCallBack * drawprogress
 
         if (retries > 40) {  
 
-            WiFi.disconnect(true);
+            WiFi.disconnect();
             delay(1000);
             
             WiFi.mode(WIFIMOD);   
@@ -240,7 +240,6 @@ void wifi_loop_connect(char* ssid, char* password){
 
     WiFi.mode(WIFIMOD);   
     WiFi.setAutoReconnect(true);  
-    WiFi.disconnect(true);
     delay(1000);
     WiFi.begin(ssid, password);
 }
@@ -343,15 +342,34 @@ boolean wifi_connect_result(){
 }
 
 
-boolean isValidIp(IPAddress ip){
-    int cnt = 0;
-    if (ip[0] == 0) return false;
-    if (ip[1] == 0) return false;
-    return true;
+
+String toStringIp(IPAddress ip) {
+  String res = "";
+  for (int i = 0; i < 3; i++) {
+    res += String((ip >> (8 * i)) & 0xFF) + ".";
+  }
+  res += String(((ip >> 8 * 3)) & 0xFF);
+  return res;
 }
 
+boolean isValidIp(String str) {
+  for (size_t i = 0; i < str.length(); i++) {
+    int c = str.charAt(i);
+    if (c != '.' && (c < '0' || c > '9')) {
+      return false;
+    }
+  }
+  return true;
+}
+boolean isValidIp(IPAddress ip){
+    String  s_ip    = toStringIp(ip);
+    boolean v1      = isValidIp(s_ip);
+    if (!v1) return false;
 
-
+    if (ip[0] == 0) return false;
+    if (ip[1] == 0) return false;    
+    return true;
+}
 
 /*
     Simple connection et configuration wifi depuis les parama
@@ -367,19 +385,20 @@ boolean _wifi_connect_2(IPAddress ip, IPAddress gateway, IPAddress subnet) {
             Serial.printf("\tassign ip to: %s \n",  ip2string(ip).c_str());
         #endif   
 
-        // if (isValidIp(gateway)) {
-        //     #ifdef DEBUG
-        //         Serial.printf("\tassign gateway to: %s \n",  ip2string(gateway).c_str());
-        //     #endif    
-        // } else gateway = WiFi.gatewayIP();
+        if (isValidIp(gateway)) {
+            #ifdef DEBUG
+                Serial.printf("\tassign gateway to: %s \n",  ip2string(gateway).c_str());
+            #endif    
+        } else gateway = WiFi.gatewayIP();
 
-        // if (isValidIp(subnet)) {
-        //     #ifdef DEBUG
-        //         Serial.printf("\tassign subnet to: %s \n",  ip2string(subnet).c_str());
-        //     #endif    
-        // } else subnet = WiFi.subnetMask();
+        if (isValidIp(subnet)) {
+            #ifdef DEBUG
+                Serial.printf("\tassign subnet to: %s \n",  ip2string(subnet).c_str());
+            #endif    
+        } else subnet = WiFi.subnetMask();
             // [wifi_connect_sta] Done: 192.168.0.100 - 192.168.0.254 - 255.255.255.0
-        WiFi.config(ip, {192,168,0,254}, {255,255,255,0});
+        WiFi.config(ip, gateway, subnet);
+        // WiFi.config(ip, {192,168,0,254}, {255,255,255,0});
 
 
         // WiFi.softAPConfig(ip, ip, subnet);        
@@ -427,7 +446,6 @@ boolean wifi_connect_sta(char* ssid, char* password, IPAddress ip, IPAddress gat
 void wifi_connect_sta(boolean * result) {
    if (wifi_id->stationMod == ADWIFI_STATION)   *result=true;
    if (wifi_id->stationMod == ADWIFI_AP)        *result=false;
-
 }
 void wifi_connect_configIp(IPAddress ip, IPAddress gateway, IPAddress subnet) {
 
@@ -510,7 +528,7 @@ int wfifi_getID_fromSPIFF(String * ret) {
 
         #ifdef DEBUG
             Serial.printf("\tSUCCES read file: %s\n", filename.c_str());
-            Serial.printf("\t%s\n", line.c_str());
+            // Serial.printf("\t%s\n", line.c_str());
             Serial.printf("[wfifi_getID_fromSPIFF] Done\n");
         #endif  
 
@@ -890,7 +908,8 @@ void wfifi_getID_toSPIFF(String ssid, String pswd, String ip, WIFI_MOD mod){
         f.close();     
 
         #ifdef DEBUG
-            Serial.printf(" Succes write file:/wifi_id.txt\n%s[wfifi_getID_toSPIFF] Done\n", xml.c_str()); 
+            // Serial.printf(" Succes write file:/wifi_id.txt\n%s[wfifi_getID_toSPIFF] Done\n", xml.c_str()); 
+            Serial.printf(" Succes write file:/wifi_id.txt [wfifi_getID_toSPIFF] Done\n"); 
         #endif
 
     }     
@@ -920,7 +939,46 @@ void wfifi_getID_toSPIFF(String ssid, String pswd, String ip, String ApIp, WIFI_
         f.close();     
 
         #ifdef DEBUG
-            Serial.printf(" Succes write file:/wifi_id.txt\n%s[wfifi_getID_toSPIFF] Done\n", xml.c_str()); 
+            // Serial.printf(" Succes write file:/wifi_id.txt\n%s[wfifi_getID_toSPIFF] Done\n", xml.c_str()); 
+            Serial.printf(" Succes write file:/wifi_id.txt [wfifi_getID_toSPIFF] Done\n"); 
+        #endif
+
+    }     
+}
+void wfifi_getID_toSPIFF(
+    String ssid, String pswd, 
+    String ip, String ApIp, 
+    String wifi_subnet, String wifi_gateway, 
+    WIFI_MOD mod){
+
+    #ifdef DEBUG
+        Serial.printf("\n[wfifi_getID_toSPIFF]\n"); 
+    #endif
+    String filename = "/wifi_id.txt";
+    File f = SPIFFS.open(filename,"w");
+    if (!f) {  
+        #ifdef DEBUG
+            Serial.printf(" ERROR read file:/wifi_id.txt\n"); 
+        #endif
+
+        f.close(); 
+    }
+    else {
+
+        String xml;
+        xml += literal_item("wifi_ssid",    ssid);
+        xml += literal_item("wifi_psk",     pswd);
+        xml += literal_item("wifi_ip",      ip);
+        xml += literal_item("wifiAp_ip",    ApIp);
+        xml += literal_item("wifi_subnet",  wifi_subnet);
+        xml += literal_item("wifi_gateway", wifi_gateway);
+        xml += literal_item("wifi_mod",     wifi_mod_toSpiff(mod));
+        f.print(xml);
+        f.close();     
+
+        #ifdef DEBUG
+            // Serial.printf(" Succes write file:/wifi_id.txt\n%s[wfifi_getID_toSPIFF] Done\n", xml.c_str()); 
+            Serial.printf(" Succes write file:/wifi_id.txt [wfifi_getID_toSPIFF] Done\n"); 
         #endif
 
     }     
@@ -946,138 +1004,4 @@ void wfifi_getID_toSPIFF(String ssid, String pswd, String ip, String ApIp, WIFI_
     // Serial.printf("xml:\n\t%s\n", xml.c_str());
 
 
-#ifdef TELNET_ENABLE
-//*************************** TELNET THINGS *************************************
 
-WiFiServer telnetServer(23);
-WiFiClient telnetClient;
-
-void telnet_setup() {
-      telnetServer.begin();
-      telnetServer.setNoDelay(true);
-      fsprintln("Telnet Client can connect");
-}
-void telnet_loop() {
-    // look for Client connect trial
-    if (telnetServer.hasClient()) {
-        if (!telnetClient || !telnetClient.connected()) {
-            if (telnetClient) {
-                telnetClient.stop();
-                fsprintln("Telnet Client Stop");
-            }
-            telnetClient = telnetServer.available();
-            fsprintln("New Telnet client");
-            telnetClient.flush();  // clear input buffer, else you get strange characters
-        }
-    }
-}
-
-// when we want to send data to telnet
-boolean telnet_put(char * output_string) {
-    if (telnetClient && telnetClient.connected()) {
-        telnetClient.print(output_string);
-    }
-}
-
-boolean telnet_put(String * output_string) {
-    if (telnetClient && telnetClient.connected()) {
-        telnetClient.print(output_string->c_str());
-    }
-}
-
-// when we want to get data from telnet
-boolean telnet_get(char * input_string) {
-    if (telnetClient.available()) {
-        input_string[0] = char(telnetClient.read());
-        return true;
-    } else {
-        return false;
-    }
-}
-
-void remote_print(String * s) {
-    if( *s == "") return;
-    telnet_put(s);
-}
-
-void remote_print(char * s) {
-    if( s == "") return;
-    telnet_put(s);
-}
-
-
-void local_print(String * s) {
-    if( *s == "") return;
-    Serial.println(*s);
-}
-void local_print(char * s) {
-    Serial.println(s);
-}
-
-
-dm debug_mode = both;
-
-// void debug(String * s) {
-//     // *s+="\n";
-//     switch (debug_mode) {
-//         case both:      local_print(s);
-//                         remote_print(s);
-//                         break;
-//         case local:     local_print(s);
-//                         break;
-//         case remote:    remote_print(s);
-//                         break;
-//     }
-// }
-
-// void debug(const String * s) {
-//     String t = *s;
-//     debug(&t);
-// }
-
-// void debug(char * buf) {
-//     // strcat(buf,"\n");
-//     switch (debug_mode) {
-//         case both:      local_print(buf);
-//                         remote_print(buf);
-//                         break;
-//         case local:     local_print(buf);
-//                         break;
-//         case remote:    remote_print(buf);
-//                         break;
-//     }
-// }
-void debugPrint(String buf) {
-    switch (debug_mode) {
-        case both:      Serial.print(buf);
-                        remote_print(&buf);
-                        // appi_softRemotePrint(buf );
-                        break;
-        case local:     Serial.print(buf);
-                        break;
-        case remote:    remote_print(&buf);
-                        break;
-    }
-}
-void debugPrintLn(String buf) {
-    switch (debug_mode) {
-        case both:      Serial.println(buf);
-                        remote_print(&buf);
-                        // appi_softRemotePrint(buf + "\n");
-                        break;
-        case local:     Serial.println(buf);
-                        break;
-        case remote:    remote_print(&buf);
-                        break;
-    }
-}
-#else
-void debugPrint(String buf) {
-    Serial.print(buf);
-    // appi_softRemotePrint(buf );
-}
-void debugPrintLn(String buf) {
-    Serial.println(buf);
-    // appi_softRemotePrint(buf + "\n");
-}
-#endif

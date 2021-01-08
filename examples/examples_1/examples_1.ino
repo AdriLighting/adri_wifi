@@ -7,7 +7,7 @@ void setup()
 
     // CONNECT TO WIFI
     IPAddress no_ip = {0, 0, 0, 0};
-	wifi_connect_sta("freebox_123_EXT", "phcaadax", no_ip, no_ip, no_ip);
+	wifi_connect_sta("xx", "xxx", no_ip, no_ip, no_ip);
 
 }
 void loop()

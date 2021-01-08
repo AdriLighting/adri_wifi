@@ -667,12 +667,6 @@ void wifi_setup(String hostName) {
 
     wifi_id = new WIFI_ID();
 
-    // wifi_id->_pswd    = "phcaadax";
-    // wifi_id->_ssid    = "freebox_123_EXT";
-    // wifi_id->_ip    = "192.168.0.30";
-    // wifi_id->_ap_ip = "192.168.0.30";
-    // wifi_id->stationMod = ADWIFI_AP;
-    // wfifi_getID_toSPIFF();
 
     String  line;
     String mod;
@@ -983,25 +977,3 @@ void wfifi_getID_toSPIFF(
 
     }     
 }
-// 12:29:51.373 -> 1   c1: 1 - <wifi_ip>192.168.0.245</wifi_ip><wifi_psk>phcaadax</wifi_psk><wifi_ssid>freebox_123_EXT</wifi_ssid><wifiAp_ip>192.168.4.1</wifiAp_ip><wifi_subnet>255.255.255.0</wifi_subnet><wifi_gateway>192.168.0.254</wifi_gateway><wifi_mod>1</wifi_mod>
-// 12:29:51.406 ->     wifi_ssid : freebox_123_EXT
-// 12:29:51.406 ->     wifi_psk : phcaadax
-// 12:29:51.406 ->     wifi_ip : 192.168.0.245
-// 12:29:51.406 ->     ap_ssid : 
-// 12:29:51.406 ->     ap_psk : 
-// 12:29:51.406 ->     wifiAp_ip : 192.168.4.1
-// 12:29:51.406 ->     wifi_subnet : 255.255.255.0
-// 12:29:51.406 ->     wifi_gateway : 192.168.0.254
-// 12:29:51.406 ->     wifi_mod : sta
-// 12:29:51.447 ->     cfgIp : static_ip
-// 12:29:58.834 -> P⸮#@⸮⸮⸮
-    // String xml;
-    // for (int i = 0; i < wifi_id_getValue_count; ++i) {
-    //     char * cName = wifi_id_getValue_list[i].name;
-    //     String value = wifi_id_getValue_list[i].savValue(wifi_id);
-    //     if (wifi_id_getValue_list[i].toSpiff) xml += literal_item(ch_toString(cName), value);
-    // }
-    // Serial.printf("xml:\n\t%s\n", xml.c_str());
-
-
-
